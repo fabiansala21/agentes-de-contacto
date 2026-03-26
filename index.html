@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Agenda de Contactos PREPUS</title>
+
+    <link rel="manifest" href="manifest.json" />
+
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+    <style>
+    
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #222;
+            background: #fff;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 0 16px 60px;
+        }
+
+        header {
+            padding: 24px 0 16px;
+            border-bottom: 2px solid #111;
+            margin-bottom: 28px;
+        }
+
+        header h1 { font-size: 1.4rem; }
+
+        h2 { font-size: 1rem; margin-bottom: 14px; color: #444; }
+
+        
+        .formulario {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 36px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-top: 6px;
+        }
+
+        input {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            font-family: sans-serif;
+            width: 100%;
+            outline: none;
+        }
+
+        input:focus { border-color: #2563eb; }
+
+        button {
+            background: #111;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 11px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: sans-serif;
+            margin-top: 6px;
+        }
+
+        .error { color: #dc2626; font-size: 0.85rem; min-height: 20px; }
+
+        #lista { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+
+        .contacto-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contacto-info .nombre { font-weight: 600; font-size: 0.95rem; }
+        .contacto-info .detalle { font-size: 0.82rem; color: #666; margin-top: 2px; }
+
+        
+        .btn-eliminar {
+            background: transparent;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-eliminar:hover { background: #fef2f2; }
+
+        .vacio { color: #999; font-size: 0.9rem; padding: 20px 0; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📓 Agenda</h1>
+    </header>
+
+    <main>
+        <section class="formulario">
+            <h2>Nuevo contacto</h2>
+
+            <label>Nombre</label>
+            <input type="text" id="input-nombre" placeholder="Ej: María López" />
+
+            <label>Teléfono</label>
+            <input type="tel" id="input-telefono" placeholder="Ej: 8888-1234" />
+
+            <label>Correo</label>
+            <input type="email" id="input-correo" placeholder="Ej: maria@correo.com" />
+
+            <button onclick="agregarContacto()">Guardar contacto</button>
+
+            <p id="mensaje-error" class="error"></p>
+        </section>
+
+        <section class="lista-seccion">
+            <h2>Mis contactos</h2>
+            <ul id="lista"></ul>
+        </section>
+    </main>
+
+    <script>
+        
+        let contactos = JSON.parse(localStorage.getItem('contactos')) || [];
+
+        
+        const inputNombre   = document.getElementById('input-nombre');
+        const inputTelefono = document.getElementById('input-telefono');
+        const inputCorreo   = document.getElementById('input-correo');
+        const elementoLista = document.getElementById('lista');
+        const mensajeError  = document.getElementById('mensaje-error');
+
+    
+        renderizarLista();
+
+        
+        function agregarContacto() {
+            
+            const nombre   = inputNombre.value.trim();
+            const telefono = inputTelefono.value.trim();
+            const correo   = inputCorreo.value.trim();
+
+    
+            if (!nombre) {
+                mensajeError.textContent = 'El nombre es obligatorio.';
+                return;
+            }
+
+            mensajeError.textContent = '';
+
+            
+            const nuevoContacto = {
+                id: Date.now(),
+                nombre: nombre,
+                telefono: telefono,
+                correo: correo
+            };
+
+            contactos.push(nuevoContacto);
+
+        
+            localStorage.setItem('contactos', JSON.stringify(contactos));
+
+    
+            inputNombre.value = '';
+            inputTelefono.value = '';
+            inputCorreo.value = '';
+
+            renderizarLista();
+        }
+
+        function eliminarContacto(id) {
+            
+            contactos = contactos.filter(c => c.id !== id);
+
+            localStorage.setItem('contactos', JSON.stringify(contactos));
+            renderizarLista();
+        }
+
+        
+        function renderizarLista() {
+            if (contactos.length === 0) {
+                elementoLista.innerHTML = '<li class="vacio">No hay contactos aún.</li>';
+                return;
+            }
+
+            elementoLista.innerHTML = contactos.map(c => `
+                <li class="contacto-item">
+                    <div class="contacto-info">
+                        <div class="nombre">${c.nombre}</div>
+                        <div class="detalle">${c.telefono || 'Sin teléfono'}</div>
+                        <div class="detalle">${c.correo || 'Sin correo'}</div>
+                    </div>
+                    <button class="btn-eliminar" onclick="eliminarContacto(${c.id})">Eliminar</button>
+                </li>
+            `).join('');
+        }
+
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            navigator.serviceWorker
+                .register('service-worker.js')
+                .then(() => console.log(' Service Worker listo'))
+                .catch(err => console.error('Error SW:', err));
+        }
+    </script>
+</body>
+</html>
